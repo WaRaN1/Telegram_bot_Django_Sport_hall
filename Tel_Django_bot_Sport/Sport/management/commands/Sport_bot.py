@@ -190,7 +190,7 @@ def get_text(message):
 
 @ivan.callback_query_handler(func=lambda call: True)
 def callback_data(call):
-    if call.data in products_all:
+    if call.data in products_all:   # Ще не працює, проблема з forenkey
         product = Product.objects.filter(name=call.data)
         try:
             _, created = User_product.objects.get_or_create(
@@ -209,16 +209,33 @@ def callback_data(call):
     elif call.data == "Переглянути кошик":
         inlines = telebot.types.InlineKeyboardMarkup()
         products = User_product.objects.all()
+        sum = 0.0
         for elem in products:
-            print(elem.name)
-            inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem} ₴", callback_data=elem.name))
-        # inlines.add(
-        #     telebot.types.InlineKeyboardButton(text="------------------------------------------------",
-        #                                        callback_data="-"))
-        # inlines.add(telebot.types.InlineKeyboardButton(text="Провести оплату замовлення",
-        #                                                callback_data="Провести оплату замовлення"))
-        # inlines.add(telebot.types.InlineKeyboardButton(text="Очистити кошик", callback_data="Очистити кошик"))
-        ivan.send_message(call.message.chat.id, "Сьогоднішній перелік товарів:", reply_markup=inlines)
+            sum += int(elem.price)
+            inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem.name} ₴", callback_data=f"{elem.name}"))
+        inlines.add(
+            telebot.types.InlineKeyboardButton(text="------------------------------------------------",
+                                               callback_data="-"))
+        inlines.add(telebot.types.InlineKeyboardButton(text="Провести оплату замовлення",
+                                                       callback_data="Провести оплату замовлення"))
+        inlines.add(telebot.types.InlineKeyboardButton(text="Очистити кошик", callback_data="Очистити кошик"))
+
+        ivan.send_message(call.message.chat.id, f"Загальна сумма: {sum}₴", reply_markup=inlines)
+
+    elif call.data == "Очистити кошик":
+        User_product.objects.all().delete()
+
+    elif call.data == "Провести оплату замовлення":
+        sum_1 = cash = Clients.objects.filter(clients_id=call.message.chat.id)
+        products = User_product.objects.all()
+        sum_all = 0
+        for elem in products:
+            sum_all += int(elem.price)
+        cash = Clients.objects.filter(clients_id=call.message.chat.id).update(cash_account=sum_1[0].cash_account - sum_all)
+        client = Clients.objects.filter(clients_id=call.message.chat.id)
+        ivan.send_message(call.message.chat.id, f"Оплату проведено. Стан вашого рахунку - {client[0].cash_account} ₴",
+                          reply_markup=main_keyboard)
+
 
 
     # product = Product.objects.all()
