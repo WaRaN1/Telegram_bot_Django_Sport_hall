@@ -3,15 +3,9 @@ from telebot import types
 import time
 from Sport.models import *
 
-# clients = os.path.join("Data_base", "Clients.txt")
-# product_shop = os.path.join("Data_base", "Shop.txt")
-# user_product = os.path.join("Data_base", "User_product.json")
-# trainer_all_time = os.path.join("Data_base", "Treiner.json")
-# trainer_all = os.path.join("Data_base", "Treiner_all.json")
 
-# with open(trainer_all, "r", encoding='utf-8') as file:
-#     name_trainer = json.load(file)
-# name = name_trainer.keys()
+products_all = [el.name for el in Product.objects.all()]
+
 
 config = {
     "name": "Python_waran_bot",
@@ -76,6 +70,24 @@ def get_text(message):
         elif message.text.lower() == "поповнити рахунок":
             ivan.register_next_step_handler(ivan.send_message(message.chat.id, "На яку суму бажаєте поповнити "
                                                                                "рахунок?"), plas_balance)
+        elif message.text.lower() == "повернутись у головне меню":
+            ivan.send_message(message.chat.id, 'Повернення у головне меню', reply_markup=main_keyboard)
+
+        elif message.text.lower() == "купівля товарів":
+            inlines = telebot.types.InlineKeyboardMarkup()
+            product = Product.objects.all()
+            for elem in product:
+                inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem} ₴", callback_data=elem.name))
+            inlines.add(
+                telebot.types.InlineKeyboardButton(text="------------------------------------------------",
+                                                   callback_data="-"))
+            inlines.add(telebot.types.InlineKeyboardButton(text="Перевірити рахунок",
+                                                           callback_data="Перевірити рахунок"))
+            inlines.add(telebot.types.InlineKeyboardButton(text="Переглянути кошик", callback_data="Переглянути кошик"))
+            inlines.add(telebot.types.InlineKeyboardButton(text="Провести оплату замовлення",
+                                                           callback_data="Провести оплату замовлення"))
+            inlines.add(telebot.types.InlineKeyboardButton(text="Очистити кошик", callback_data="Очистити кошик"))
+            ivan.send_message(message.chat.id, "Сьогоднішній перелік товарів:", reply_markup=inlines)
 
     else:
         if message.text.lower() == "авторизація":
@@ -90,33 +102,14 @@ def get_text(message):
 
 
 #
-#     user_time_all = Clients.objects.filter(clients_id=message.chat.id)
-#     for el in user_time_all:
-#         if el.split("/")[0] == str(message.chat.id) and (time.time() - float(el.split("/")[2])) < 86400:
-#             var_step = 1
-#     if var_step == 1:
-#
 
-
-#
-#         elif message.text.lower() == "купівля товарів":
-#             inlines = telebot.types.InlineKeyboardMarkup()
-#             for elem in product():
-#                 inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem} ₴", callback_data=elem))
-#             inlines.add(telebot.types.InlineKeyboardButton(text="Перевірити рахунок", callback_data="Перевірити рахунок"))
-#             inlines.add(telebot.types.InlineKeyboardButton(text="Переглянути кошик", callback_data="Переглянути кошик"))
-#             inlines.add(telebot.types.InlineKeyboardButton(text="Провести оплату замовлення",
-#                                                            callback_data="Провести оплату замовлення"))
-#             inlines.add(telebot.types.InlineKeyboardButton(text="Очистити кошик", callback_data="Очистити кошик"))
-#             ivan.send_message(message.chat.id, "Сьогоднішній перелік товарів:", reply_markup=inlines)
 #
 #         elif message.text.lower() == "тренування":
 #             ivan.register_next_step_handler(
 #                 ivan.send_message(message.chat.id, "Оберіть одного з наших тренерів", reply_markup=trainer_keyboard),
 #                 trainer_time)
 #
-#         elif message.text.lower() == "повернутись у головне меню":
-#             ivan.send_message(message.chat.id, 'Повернення у головне меню', reply_markup=main_keyboard)
+
 #
 #         elif message.text.lower() == "переглянути замовлені тренування":  # Вивід всіх передзамовлених тренувань з тренером
 #             ivan.send_message(message.chat.id, rozcklad_all(message))
@@ -195,43 +188,79 @@ def get_text(message):
 #     return all_info_user_prod
 
 
-# @ivan.callback_query_handler(func=lambda call: True)
-# def callback_data(call):
-#     if call.data in product():  # Перевірка чи є натиснена кнопка переліком товару
-#         ivan.send_message(call.message.chat.id, f"{call.data} ₴ додано до кошика")
-#         with open(user_product, "r", encoding='utf-8') as r_file:
-#             user_prod = json.load(r_file)
-#         if call.data.split(' - ')[0] in user_prod[
-#             f"{call.message.chat.id}"].keys():  # Перевіряємо чи є у корзині такий товару
-#             user_prod[f"{call.message.chat.id}"][call.data.split(' - ')[0]] += float(call.data.split(' - ')[1])
-#         else:
-#             user_prod[f"{call.message.chat.id}"][call.data.split(' - ')[0]] = float(call.data.split(' - ')[1])
-#         with open(user_product, "w", encoding='utf-8') as w_file:
-#             json.dump(user_prod, w_file, ensure_ascii=False)
-#
-#     elif call.data.lower() == "переглянути кошик":
-#         ivan.send_message(call.message.chat.id,
-#                           f"Ви замовили товари:\n{chec_user_prod(call)[0]}\n Сума покупки: {chec_user_prod(call)[1]} ₴")
-#
-#     elif call.data.lower() == "перевірити рахунок":
-#         ivan.send_message(call.message.chat.id, f"Стан вашого рахунку - {check_account(call.message)} ₴")
-#
-#     elif call.data.lower() == "очистити кошик":
-#         clear_user_product(call)
-#         ivan.send_message(call.message.chat.id, "Кошик очищено")
-#
-#     elif call.data.lower() == "провести оплату замовлення":
-#         ivan.send_message(call.message.chat.id, "Оплату проведено", minus_balance(call))
-#         clear_user_product(call)
-#
-#     elif call.message.text in name_trainer:
-#         with open(trainer_all_time, "r", encoding='utf-8') as r_file:
-#             n_d_t = json.load(r_file)
-#         print(n_d_t[call.data.split("/")[0]][call.data.split("/")[1]])
-#         n_d_t[call.data.split("/")[0]][call.data.split("/")[1]].update(
-#             {f"{call.message.text}": f"{call.message.chat.id}"})
-#         with open(trainer_all_time, "w", encoding='utf-8') as w_file:
-#             json.dump(n_d_t, w_file, ensure_ascii=False)
+@ivan.callback_query_handler(func=lambda call: True)
+def callback_data(call):
+    if call.data in products_all:
+        product = Product.objects.filter(name=call.data)
+        try:
+            _, created = User_product.objects.get_or_create(
+                clients=call.message.chat.id,
+                name=product[0].name,
+                price=product[0].price,
+            )
+        except:
+            pass
+
+    elif call.data == "Перевірити рахунок":
+        client = Clients.objects.filter(clients_id=call.message.chat.id)
+        ivan.send_message(call.message.chat.id, f"Стан вашого рахунку - {client[0].cash_account} ₴",
+                          reply_markup=main_keyboard)
+
+    elif call.data == "Переглянути кошик":
+        inlines = telebot.types.InlineKeyboardMarkup()
+        products = User_product.objects.all()
+        for elem in products:
+            print(elem.name)
+            inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem} ₴", callback_data=elem.name))
+        # inlines.add(
+        #     telebot.types.InlineKeyboardButton(text="------------------------------------------------",
+        #                                        callback_data="-"))
+        # inlines.add(telebot.types.InlineKeyboardButton(text="Провести оплату замовлення",
+        #                                                callback_data="Провести оплату замовлення"))
+        # inlines.add(telebot.types.InlineKeyboardButton(text="Очистити кошик", callback_data="Очистити кошик"))
+        ivan.send_message(call.message.chat.id, "Сьогоднішній перелік товарів:", reply_markup=inlines)
+
+
+    # product = Product.objects.all()
+    # for elem in product:
+    #     if call.data == elem.name:
+
+
+    # if call.data in product():  # Перевірка чи є натиснена кнопка переліком товару
+    #     ivan.send_message(call.message.chat.id, f"{call.data} ₴ додано до кошика")
+    #     with open(user_product, "r", encoding='utf-8') as r_file:
+    #         user_prod = json.load(r_file)
+    #     if call.data.split(' - ')[0] in user_prod[
+    #         f"{call.message.chat.id}"].keys():  # Перевіряємо чи є у корзині такий товару
+    #         user_prod[f"{call.message.chat.id}"][call.data.split(' - ')[0]] += float(call.data.split(' - ')[1])
+    #     else:
+    #         user_prod[f"{call.message.chat.id}"][call.data.split(' - ')[0]] = float(call.data.split(' - ')[1])
+    #     with open(user_product, "w", encoding='utf-8') as w_file:
+    #         json.dump(user_prod, w_file, ensure_ascii=False)
+    #
+    # elif call.data.lower() == "переглянути кошик":
+    #     ivan.send_message(call.message.chat.id,
+    #                       f"Ви замовили товари:\n{chec_user_prod(call)[0]}\n Сума покупки: {chec_user_prod(call)[1]} ₴")
+    #
+    # elif call.data.lower() == "перевірити рахунок":
+    #     ivan.send_message(call.message.chat.id, f"Стан вашого рахунку - {check_account(call.message)} ₴")
+    #
+    # elif call.data.lower() == "очистити кошик":
+    #     clear_user_product(call)
+    #     ivan.send_message(call.message.chat.id, "Кошик очищено")
+    #
+    # elif call.data.lower() == "провести оплату замовлення":
+    #     ivan.send_message(call.message.chat.id, "Оплату проведено", minus_balance(call))
+    #     clear_user_product(call)
+    #
+    # elif call.message.text in name_trainer:
+    #     with open(trainer_all_time, "r", encoding='utf-8') as r_file:
+    #         n_d_t = json.load(r_file)
+    #     print(n_d_t[call.data.split("/")[0]][call.data.split("/")[1]])
+    #     n_d_t[call.data.split("/")[0]][call.data.split("/")[1]].update(
+    #         {f"{call.message.text}": f"{call.message.chat.id}"})
+    #     with open(trainer_all_time, "w", encoding='utf-8') as w_file:
+    #         json.dump(n_d_t, w_file, ensure_ascii=False)
 
 
 def registration(message):
