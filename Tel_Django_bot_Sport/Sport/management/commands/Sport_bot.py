@@ -95,24 +95,15 @@ def get_text(message):
             ivan.send_message(message.chat.id, "Сьогоднішній перелік товарів:", reply_markup=inlines)
 
         elif message.text.lower() == "тренування":
-            ivan.register_next_step_handler(
-                ivan.send_message(message.chat.id, "Оберіть одного з наших тренерів", reply_markup=trainer_keyboard),
-                trainer_time)
+            ivan.send_message(message.chat.id, "Оберіть одного з наших тренерів", reply_markup=trainer_keyboard)
 
         elif message.text in name_trainer_all:
-            ivan.send_message(message.chat.id, "Tr"),  trainer_time
+            trainer_time(message)
 
         elif message.text == "Переглянути замовлені тренування":
             us_roz(message)
-            # us_tr = Schedule_treiner.objects.filter(clients=Clients.objects.get(clients_id=message.chat.id))
-            # inlines = telebot.types.InlineKeyboardMarkup()
-            # count = 1
-            # for i in us_tr:
-            #     inlines.add(telebot.types.InlineKeyboardButton(text=f"{count}. {i.weekday}, "
-            #                                                         f"тренер: {i.treiner_name}, "
-            #                                                         f"час: {i.time_training}", callback_data=f"{1}"))
-            #     count += 1
-            ivan.send_message(message.chat.id, f"Призначені тренування на наступний тиждень:", reply_markup=us_roz(message))
+            ivan.send_message(message.chat.id, f"Призначені тренування на наступний тиждень:",
+                              reply_markup=us_roz(message))
 
     else:
         if message.text.lower() == "авторизація":
@@ -246,6 +237,7 @@ def trainer_time(message):
         ivan.send_message(message.chat.id, f"Призначені тренування на наступний тиждень:", reply_markup=us_roz(message))
     else:
         treiner = Treiner_warker.objects.filter(name=message.text)
+        treiner_id = ""
         for el in treiner:
             treiner_id = el.id
         treiner_data = Schedule_treiner.objects.filter(treiner_name=treiner_id)
@@ -269,7 +261,8 @@ def trainer_time(message):
                                                                    callback_data=f"{elem_day},{elem_time},"
                                                                                      f"{message.text}"))
         ivan.send_message(message.chat.id, f'Ви обрали тренера {message.text}. Оберіть день для тренувань та час',
-                        reply_markup=inlines)
+                          reply_markup=inlines)
+    return inlines
 
 
 ivan.polling(none_stop=True, interval=0)
