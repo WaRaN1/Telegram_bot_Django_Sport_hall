@@ -32,14 +32,17 @@ work_with_a_cash_keyboard.add(button_check_account, button_top_up_the_account, b
 
 trainer_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)  # Вивід всіх наявних тренерів на кнопки
 name_trainer = Treiner_warker.objects.all()
+name_trainer_all = []
 for i in name_trainer:
     trainer_keyboard.add(types.InlineKeyboardButton(f"{i}", f"{i}"))
+    name_trainer_all.append(i.name)
 button_traine_user = types.InlineKeyboardButton("Повернутись у головне меню")
 button_return_to_the_main_menu = types.InlineKeyboardButton("Переглянути замовлені тренування")
 trainer_keyboard.add(button_return_to_the_main_menu, button_traine_user)
 
 ivan = telebot.TeleBot(config["token"])
 
+print(name_trainer_all)
 
 @ivan.message_handler(commands=["start"])
 def start(message):
@@ -92,9 +95,13 @@ def get_text(message):
             ivan.send_message(message.chat.id, "Сьогоднішній перелік товарів:", reply_markup=inlines)
 
         elif message.text.lower() == "тренування":
+            print("1")
             ivan.register_next_step_handler(
                 ivan.send_message(message.chat.id, "Оберіть одного з наших тренерів", reply_markup=trainer_keyboard),
                 trainer_time)
+
+        elif message.text in name_trainer_all:
+            ivan.send_message(message.chat.id, trainer_time)
 
     else:
         if message.text.lower() == "авторизація":
