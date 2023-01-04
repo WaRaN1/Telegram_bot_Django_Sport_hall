@@ -189,19 +189,11 @@ def callback_data(call):
         product = Product.objects.filter(name=call.data)
         try:
             _, created = User_product.objects.get_or_create(
-                clients=call.message.chat.id,
-                name=product[0].name,
+                clients=Clients.objects.get(clients_id=call.message.chat.id),
+                name=Product.objects.get(name=product[0].name),
                 price=product[0].price,
             )
-            print("1")
-            print(call.message.chat.id)
-            print(product[0].name)
-            print(product[0].price)
         except:
-            print("2")
-            print(call.message.chat.id)
-            print(product[0].name)
-            print(product[0].price)
             pass
 
     elif call.data == "Перевірити рахунок":
@@ -236,31 +228,20 @@ def callback_data(call):
             sum_all += int(elem.price)
         cash = Clients.objects.filter(clients_id=call.message.chat.id).update(cash_account=sum_1[0].cash_account - sum_all)
         client = Clients.objects.filter(clients_id=call.message.chat.id)
-        # User_product.objects.all().delete()
+        User_product.objects.all().delete()
         ivan.send_message(call.message.chat.id, f"Оплату проведено. Стан вашого рахунку - {client[0].cash_account} ₴",
                           reply_markup=main_keyboard)
 
     elif call.data.split(",")[0] in treining_day and call.data.split(",")[1] in treining_time\
-            and call.data.split(",")[2] in name_trainer_all:
-        # client = Clients.objects.all()
-        # clientId = 0
-        # for el in client:
-        #     if el.clients_id == call.message.chat.id:
-        #         clientId = el.id
-        #     else:
-        #         print("no")
-        # print(clientId)
-        # print("yes")
+            and call.data.split(",")[2] in name_trainer_all: # Перевірка формату виводу продуктів
         try:
             _, created = Schedule_treiner.objects.get_or_create(
                 weekday=call.data.split(",")[0],
-                treiner_name=call.data.split(",")[1],
-                time_training=call.data.split(",")[2],
-                clients=call.message.chat.id
+                treiner_name=Treiner_warker.objects.get(name=call.data.split(",")[2]),
+                time_training=call.data.split(",")[1],
+                clients=Clients.objects.get(clients_id=call.message.chat.id)
             )
-            print("11")
         except:
-            print("22")
             pass
 
 def registration(message):
