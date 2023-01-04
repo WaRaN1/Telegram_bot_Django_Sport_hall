@@ -54,6 +54,7 @@ def start(message):
 
 @ivan.message_handler(content_types=["text"])
 def get_text(message):
+    print("message: ", message.text)
     var_step = 0
     client = Clients.objects.filter(clients_id=message.chat.id)
     if len(client) > 0:
@@ -89,6 +90,11 @@ def get_text(message):
             inlines.add(telebot.types.InlineKeyboardButton(text="Очистити кошик", callback_data="Очистити кошик"))
             ivan.send_message(message.chat.id, "Сьогоднішній перелік товарів:", reply_markup=inlines)
 
+        elif message.text.lower() == "тренування":
+            ivan.register_next_step_handler(
+                ivan.send_message(message.chat.id, "Оберіть одного з наших тренерів", reply_markup=trainer_keyboard),
+                trainer_time)
+
     else:
         if message.text.lower() == "авторизація":
             ivan.register_next_step_handler(ivan.send_message(message.chat.id, "Введіть пароль для входу"),
@@ -104,10 +110,7 @@ def get_text(message):
 #
 
 #
-#         elif message.text.lower() == "тренування":
-#             ivan.register_next_step_handler(
-#                 ivan.send_message(message.chat.id, "Оберіть одного з наших тренерів", reply_markup=trainer_keyboard),
-#                 trainer_time)
+
 #
 
 #
@@ -138,24 +141,7 @@ def get_text(message):
 #                             break
 #     return rozcklad
 #
-# def trainer_time(message):
-#     if message.text.lower() == "повернутись у головне меню":  # Щоб уникнути крашу при виборі не тренера а повернення у головне меню
-#         ivan.send_message(message.chat.id, 'Повернення у головне меню', reply_markup=main_keyboard)
-#     elif message.text.lower() == "переглянути замовлені тренування":    # Щоб уникнути крашу при виборі не тренера а перерегляд замовлених тренувань
-#         ivan.send_message(message.chat.id, rozcklad_all(message))
-#     else:
-#         ivan.send_message(message.chat.id, f'Ви обрали тренера {message.text}. Оберіть день для тренувань та час')
-#         with open(trainer_all_time, "r", encoding='utf-8') as r_file:
-#             trainer_time_all = json.load(r_file)
-#         inlines_time = telebot.types.InlineKeyboardMarkup()
-#         for day in trainer_time_all:
-#             inlines_time.add(
-#                 telebot.types.InlineKeyboardButton(text=f"-----------------       {day}       -----------------",
-#                                                    callback_data=day))
-#             for time_d in trainer_time_all[day]:
-#                 if message.text not in trainer_time_all[day][time_d]:
-#                     inlines_time.add(telebot.types.InlineKeyboardButton(text=time_d, callback_data=f"{day}/{time_d}"))
-#         ivan.send_message(message.chat.id, f"{message.text}", reply_markup=inlines_time)
+
 #
 #
 # def check_account(message):  # Функція для перевірки баланса
@@ -190,6 +176,7 @@ def get_text(message):
 
 @ivan.callback_query_handler(func=lambda call: True)
 def callback_data(call):
+    print("call.data: ", call.data)
     if call.data in products_all:   # Ще не працює, проблема з forenkey
         product = Product.objects.filter(name=call.data)
         try:
@@ -198,7 +185,15 @@ def callback_data(call):
                 name=product[0].name,
                 price=product[0].price,
             )
+            print("1")
+            print(call.message.chat.id)
+            print(product[0].name)
+            print(product[0].price)
         except:
+            print("2")
+            print(call.message.chat.id)
+            print(product[0].name)
+            print(product[0].price)
             pass
 
     elif call.data == "Перевірити рахунок":
@@ -226,13 +221,14 @@ def callback_data(call):
         User_product.objects.all().delete()
 
     elif call.data == "Провести оплату замовлення":
-        sum_1 = cash = Clients.objects.filter(clients_id=call.message.chat.id)
+        sum_1 = Clients.objects.filter(clients_id=call.message.chat.id)
         products = User_product.objects.all()
         sum_all = 0
         for elem in products:
             sum_all += int(elem.price)
         cash = Clients.objects.filter(clients_id=call.message.chat.id).update(cash_account=sum_1[0].cash_account - sum_all)
         client = Clients.objects.filter(clients_id=call.message.chat.id)
+        # User_product.objects.all().delete()
         ivan.send_message(call.message.chat.id, f"Оплату проведено. Стан вашого рахунку - {client[0].cash_account} ₴",
                           reply_markup=main_keyboard)
 
@@ -316,6 +312,27 @@ def plas_balance(message):
                                                                            int(float(message.text))) # Без float б'є помилку при введенні у телеграм числа через крапку
     plas_balance = "https://www.portmone.com.ua/popovnyty-rakhunok-mobilnoho?gclid=Cj0KCQiA45qdBhD-ARIsAOHbVdFrlNp38FMOhwif78In6fNRi-hlSVrfjlOp6US5LeP3dsr37Z9OzjQaAvNyEALw_wcB"
     ivan.send_message(message.chat.id, plas_balance)
+
+
+def trainer_time(message):
+    if message.text.lower() == "повернутись у головне меню":  # Щоб уникнути крашу при виборі не тренера а повернення у головне меню
+        ivan.send_message(message.chat.id, 'Повернення у головне меню', reply_markup=main_keyboard)
+    elif message.text.lower() == "переглянути замовлені тренування":    # Щоб уникнути крашу при виборі не тренера а перерегляд замовлених тренувань
+        ivan.send_message(message.chat.id, rozcklad_all(message))
+    else:
+        ivan.send_message(message.chat.id, f'Ви обрали тренера {message.text}. Оберіть день для тренувань та час')
+        with open(trainer_all_time, "r", encoding='utf-8') as r_file:
+            trainer_time_all = json.load(r_file)
+        inlines_time = telebot.types.InlineKeyboardMarkup()
+        for day in trainer_time_all:
+            inlines_time.add(
+                telebot.types.InlineKeyboardButton(text=f"-----------------       {day}       -----------------",
+                                                   callback_data=day))
+            for time_d in trainer_time_all[day]:
+                if message.text not in trainer_time_all[day][time_d]:
+                    inlines_time.add(telebot.types.InlineKeyboardButton(text=time_d, callback_data=f"{day}/{time_d}"))
+        ivan.send_message(message.chat.id, f"{message.text}", reply_markup=inlines_time)
+
 
 #
 # def minus_balance(call):
