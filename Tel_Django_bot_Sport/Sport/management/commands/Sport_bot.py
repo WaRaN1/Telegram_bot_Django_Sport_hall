@@ -242,7 +242,15 @@ def callback_data(call):
 
     elif call.data.split(",")[0] in treining_day and call.data.split(",")[1] in treining_time\
             and call.data.split(",")[2] in name_trainer_all:
-        print("yes")
+        # client = Clients.objects.all()
+        # clientId = 0
+        # for el in client:
+        #     if el.clients_id == call.message.chat.id:
+        #         clientId = el.id
+        #     else:
+        #         print("no")
+        # print(clientId)
+        # print("yes")
         try:
             _, created = Schedule_treiner.objects.get_or_create(
                 weekday=call.data.split(",")[0],
