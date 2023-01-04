@@ -5,7 +5,8 @@ from Sport.models import *
 
 
 products_all = [el.name for el in Product.objects.all()]
-
+treining_time = ["8:00-9:30", "9:30-11:00", "11:00-12:30", "13:00-14:30", "14:30-16:00", "16:00-17:30", "17:30-19:00"]
+treining_day = ["Понеділок", "Вівторок", "Середа", "Четверг", "П'ятниця", "Субота", "Неділя"]
 
 config = {
     "name": "Python_waran_bot",
@@ -317,21 +318,43 @@ def plas_balance(message):
 def trainer_time(message):
     if message.text.lower() == "повернутись у головне меню":  # Щоб уникнути крашу при виборі не тренера а повернення у головне меню
         ivan.send_message(message.chat.id, 'Повернення у головне меню', reply_markup=main_keyboard)
-    elif message.text.lower() == "переглянути замовлені тренування":    # Щоб уникнути крашу при виборі не тренера а перерегляд замовлених тренувань
-        ivan.send_message(message.chat.id, rozcklad_all(message))
+    # elif message.text.lower() == "переглянути замовлені тренування":    # Щоб уникнути крашу при виборі не тренера а перерегляд замовлених тренувань
+    #     ivan.send_message(message.chat.id, rozcklad_all(message))
     else:
-        ivan.send_message(message.chat.id, f'Ви обрали тренера {message.text}. Оберіть день для тренувань та час')
-        with open(trainer_all_time, "r", encoding='utf-8') as r_file:
-            trainer_time_all = json.load(r_file)
-        inlines_time = telebot.types.InlineKeyboardMarkup()
-        for day in trainer_time_all:
-            inlines_time.add(
-                telebot.types.InlineKeyboardButton(text=f"-----------------       {day}       -----------------",
-                                                   callback_data=day))
-            for time_d in trainer_time_all[day]:
-                if message.text not in trainer_time_all[day][time_d]:
-                    inlines_time.add(telebot.types.InlineKeyboardButton(text=time_d, callback_data=f"{day}/{time_d}"))
-        ivan.send_message(message.chat.id, f"{message.text}", reply_markup=inlines_time)
+        treiner = Treiner_warker.objects.filter(name=message.text)
+        for el in treiner:
+            treiner_id = el.id
+        treiner_data = Schedule_treiner.objects.filter(treiner_name=treiner_id)
+        dict_schedule_treiner = {}
+        for elem in treiner_data:
+            dict_schedule_treiner[elem.weekday] = elem.time_training
+        inlines = telebot.types.InlineKeyboardMarkup()
+        for elem_day in treining_day:
+            inlines.add(telebot.types.InlineKeyboardButton(text=f"-----------------    {elem_day}    -----------------",
+                                                           callback_data=f"{1}"))
+            for elem_time in treining_time:
+                if elem_day in dict_schedule_treiner:
+                    if elem_time == dict_schedule_treiner[elem_day]:
+                        continue
+                    else:
+                        inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem_time}", callback_data=f"{1}"))
+                else:
+                    inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem_time}", callback_data=f"{1}"))
+    ivan.send_message(message.chat.id, f'Ви обрали тренера {message.text}. Оберіть день для тренувань та час',
+                      reply_markup=inlines)
+
+            # print(elem_data, elem_data.treiner_name)
+
+        # inlines_time = telebot.types.InlineKeyboardMarkup()
+        # for day in trainer_time_all:
+        #     inlines_time.add(
+        #         telebot.types.InlineKeyboardButton(text=f"-----------------       {day}       -----------------",
+        #                                            callback_data=day))
+        #     for time_d in trainer_time_all[day]:
+        #         if message.text not in trainer_time_all[day][time_d]:
+        #             inlines_time.add(telebot.types.InlineKeyboardButton(text=time_d, callback_data=f"{day}/{time_d}"))
+        # ivan.send_message(message.chat.id, f"{message.text}", reply_markup=inlines_time)
+
 
 
 #
