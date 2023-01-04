@@ -103,15 +103,16 @@ def get_text(message):
             ivan.send_message(message.chat.id, "Tr"),  trainer_time
 
         elif message.text == "Переглянути замовлені тренування":
-            us_tr = Schedule_treiner.objects.filter(clients=Clients.objects.get(clients_id=message.chat.id))
-            inlines = telebot.types.InlineKeyboardMarkup()
-            count = 1
-            for i in us_tr:
-                inlines.add(telebot.types.InlineKeyboardButton(text=f"{count}. {i.weekday}, "
-                                                                    f"тренер: {i.treiner_name}, "
-                                                                    f"час: {i.time_training}", callback_data=f"{1}"))
-                count += 1
-            ivan.send_message(message.chat.id, f"Призначені тренування на наступний тиждень:", reply_markup=inlines),
+            us_roz(message)
+            # us_tr = Schedule_treiner.objects.filter(clients=Clients.objects.get(clients_id=message.chat.id))
+            # inlines = telebot.types.InlineKeyboardMarkup()
+            # count = 1
+            # for i in us_tr:
+            #     inlines.add(telebot.types.InlineKeyboardButton(text=f"{count}. {i.weekday}, "
+            #                                                         f"тренер: {i.treiner_name}, "
+            #                                                         f"час: {i.time_training}", callback_data=f"{1}"))
+            #     count += 1
+            ivan.send_message(message.chat.id, f"Призначені тренування на наступний тиждень:", reply_markup=us_roz(message))
 
     else:
         if message.text.lower() == "авторизація":
@@ -125,71 +126,16 @@ def get_text(message):
                               reply_markup=free_access)
 
 
-#
-
-#
-
-#
-
-#
-#         elif message.text.lower() == "переглянути замовлені тренування":  # Вивід всіх передзамовлених тренувань з тренером
-#             ivan.send_message(message.chat.id, rozcklad_all(message))
-#     else:
-
-#         else:
-#             ivan.send_message(message.chat.id, "Для доступу до функціоналу бота пройдіть авторизацію",
-#                               reply_markup=free_access)
-
-# def rozcklad_all(message):
-#     with open(trainer_all_time, "r", encoding='utf-8') as r_file:
-#         trainer_time_all = json.load(r_file)
-#     rozcklad = "Призначені тренування на наступний тиждень:\n\n"
-#     for el in trainer_time_all:
-#         for elem in trainer_time_all[el]:
-#             for tim in trainer_time_all[el][elem]:
-#                 if trainer_time_all[el][elem][tim] == str(message.chat.id):
-#                     name_trainer_a = trainer_time_all[el][elem]
-#                     for i in trainer_time_all[el].keys():
-#                         if trainer_time_all[el][i] == name_trainer_a:
-#                             rozcklad += f"День тренування: {el}\n"
-#                             rozcklad += f"Час тренування:    {elem}\n"
-#                             for i in trainer_time_all[el][elem].keys():
-#                                 if trainer_time_all[el][elem][i] == str(message.chat.id):
-#                                     rozcklad += f"Ваш тренер:            {i}\n\n"
-#                             break
-#     return rozcklad
-#
-
-#
-#
-# def check_account(message):  # Функція для перевірки баланса
-#     file = open(clients, "r", encoding='utf-8')
-#     all_users = file.read().split("\n")
-#     file.close()
-#     user_balance = ""
-#     for el in all_users:
-#         if el.split("/")[0] == str(message.chat.id):
-#             user_balance = float(el.split("/")[3])
-#     return user_balance
-#
-#
-# def product():
-#     file = open(product_shop, "r", encoding='utf-8')
-#     product = file.read().split("\n")
-#     file.close()
-#     return product
-#
-#
-# def chec_user_prod(call):
-#     with open(user_product, "r", encoding='utf-8') as r_file:
-#         user_prod = json.load(r_file)
-#     user_prod_var = ""
-#     user_prod_sum = 0.0
-#     for i in user_prod[f"{call.message.chat.id}"]:
-#         user_prod_var += f"{i}\n"
-#         user_prod_sum += user_prod[f'{call.message.chat.id}'][i]
-#     all_info_user_prod = [user_prod_var, user_prod_sum]
-#     return all_info_user_prod
+def us_roz(message):
+    us_tr = Schedule_treiner.objects.filter(clients=Clients.objects.get(clients_id=message.chat.id))
+    inlines = telebot.types.InlineKeyboardMarkup()
+    count = 1
+    for i in us_tr:
+        inlines.add(telebot.types.InlineKeyboardButton(text=f"{count}. {i.weekday}, "
+                                                            f"тренер: {i.treiner_name}, "
+                                                            f"час: {i.time_training}", callback_data=f"{1}"))
+        count += 1
+    return inlines
 
 
 @ivan.callback_query_handler(func=lambda call: True)
@@ -295,8 +241,9 @@ def plas_balance(message):
 def trainer_time(message):
     if message.text.lower() == "повернутись у головне меню":  # Щоб уникнути крашу при виборі не тренера а повернення у головне меню
         ivan.send_message(message.chat.id, 'Повернення у головне меню', reply_markup=main_keyboard)
-    # elif message.text.lower() == "переглянути замовлені тренування":    # Щоб уникнути крашу при виборі не тренера а перерегляд замовлених тренувань
-    #     ivan.send_message(message.chat.id, rozcklad_all(message))
+    elif message.text.lower() == "переглянути замовлені тренування":    # Щоб уникнути крашу при виборі не тренера а перерегляд замовлених тренувань
+        us_roz(message)
+        ivan.send_message(message.chat.id, f"Призначені тренування на наступний тиждень:", reply_markup=us_roz(message))
     else:
         treiner = Treiner_warker.objects.filter(name=message.text)
         for el in treiner:
@@ -324,36 +271,5 @@ def trainer_time(message):
         ivan.send_message(message.chat.id, f'Ви обрали тренера {message.text}. Оберіть день для тренувань та час',
                         reply_markup=inlines)
 
-
-# def user_trainer_time(message):
-#     us_tr = Schedule_treiner.objects.get(clients=message.chat.id)
-#     print(us_tr)
-
-
-    # treiner = Treiner_warker.objects.filter(name=message.text)
-    # for el in treiner:
-    #     treiner_id = el.id
-    # treiner_data = Schedule_treiner.objects.filter(treiner_name=treiner_id)
-    # dict_schedule_treiner = {}
-    # for elem in treiner_data:
-    #     dict_schedule_treiner[elem.weekday] = elem.time_training
-    # inlines = telebot.types.InlineKeyboardMarkup()
-    # for elem_day in treining_day:
-    #     inlines.add(telebot.types.InlineKeyboardButton(text=f"-----------------    {elem_day}    -----------------",
-    #                                                    callback_data=f"{1}"))
-    #     for elem_time in treining_time:
-    #         if elem_day not in dict_schedule_treiner:
-    #             if elem_time != dict_schedule_treiner[elem_day]:
-    #                 continue
-    #             else:
-    #                 inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem_time}",
-    #                                                                callback_data=f"{elem_day},{elem_time},"
-    #                                                                              f"{message.text}"))
-    #         else:
-    #             inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem_time}",
-    #                                                            callback_data=f"{elem_day},{elem_time},"
-    #                                                                          f"{message.text}"))
-    ivan.send_message(message.chat.id, f'Тренування')
-                      # reply_markup=inlines)
 
 ivan.polling(none_stop=True, interval=0)
