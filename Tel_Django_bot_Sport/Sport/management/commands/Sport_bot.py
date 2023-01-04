@@ -240,49 +240,20 @@ def callback_data(call):
         ivan.send_message(call.message.chat.id, f"Оплату проведено. Стан вашого рахунку - {client[0].cash_account} ₴",
                           reply_markup=main_keyboard)
 
-
-
-    # product = Product.objects.all()
-    # for elem in product:
-    #     if call.data == elem.name:
-
-
-    # if call.data in product():  # Перевірка чи є натиснена кнопка переліком товару
-    #     ivan.send_message(call.message.chat.id, f"{call.data} ₴ додано до кошика")
-    #     with open(user_product, "r", encoding='utf-8') as r_file:
-    #         user_prod = json.load(r_file)
-    #     if call.data.split(' - ')[0] in user_prod[
-    #         f"{call.message.chat.id}"].keys():  # Перевіряємо чи є у корзині такий товару
-    #         user_prod[f"{call.message.chat.id}"][call.data.split(' - ')[0]] += float(call.data.split(' - ')[1])
-    #     else:
-    #         user_prod[f"{call.message.chat.id}"][call.data.split(' - ')[0]] = float(call.data.split(' - ')[1])
-    #     with open(user_product, "w", encoding='utf-8') as w_file:
-    #         json.dump(user_prod, w_file, ensure_ascii=False)
-    #
-    # elif call.data.lower() == "переглянути кошик":
-    #     ivan.send_message(call.message.chat.id,
-    #                       f"Ви замовили товари:\n{chec_user_prod(call)[0]}\n Сума покупки: {chec_user_prod(call)[1]} ₴")
-    #
-    # elif call.data.lower() == "перевірити рахунок":
-    #     ivan.send_message(call.message.chat.id, f"Стан вашого рахунку - {check_account(call.message)} ₴")
-    #
-    # elif call.data.lower() == "очистити кошик":
-    #     clear_user_product(call)
-    #     ivan.send_message(call.message.chat.id, "Кошик очищено")
-    #
-    # elif call.data.lower() == "провести оплату замовлення":
-    #     ivan.send_message(call.message.chat.id, "Оплату проведено", minus_balance(call))
-    #     clear_user_product(call)
-    #
-    # elif call.message.text in name_trainer:
-    #     with open(trainer_all_time, "r", encoding='utf-8') as r_file:
-    #         n_d_t = json.load(r_file)
-    #     print(n_d_t[call.data.split("/")[0]][call.data.split("/")[1]])
-    #     n_d_t[call.data.split("/")[0]][call.data.split("/")[1]].update(
-    #         {f"{call.message.text}": f"{call.message.chat.id}"})
-    #     with open(trainer_all_time, "w", encoding='utf-8') as w_file:
-    #         json.dump(n_d_t, w_file, ensure_ascii=False)
-
+    elif call.data.split(",")[0] in treining_day and call.data.split(",")[1] in treining_time\
+            and call.data.split(",")[2] in name_trainer_all:
+        print("yes")
+        try:
+            _, created = Schedule_treiner.objects.get_or_create(
+                weekday=call.data.split(",")[0],
+                treiner_name=call.data.split(",")[1],
+                time_training=call.data.split(",")[2],
+                clients=call.message.chat.id
+            )
+            print("11")
+        except:
+            print("22")
+            pass
 
 def registration(message):
     password = message.text
@@ -344,52 +315,15 @@ def trainer_time(message):
                     if elem_time == dict_schedule_treiner[elem_day]:
                         continue
                     else:
-                        inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem_time}", callback_data=f"{1}"))
+                        inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem_time}",
+                                                                       callback_data=f"{elem_day},{elem_time},"
+                                                                                     f"{message.text}"))
                 else:
-                    inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem_time}", callback_data=f"{1}"))
-    ivan.send_message(message.chat.id, f'Ви обрали тренера {message.text}. Оберіть день для тренувань та час',
-                      reply_markup=inlines)
-
-            # print(elem_data, elem_data.treiner_name)
-
-        # inlines_time = telebot.types.InlineKeyboardMarkup()
-        # for day in trainer_time_all:
-        #     inlines_time.add(
-        #         telebot.types.InlineKeyboardButton(text=f"-----------------       {day}       -----------------",
-        #                                            callback_data=day))
-        #     for time_d in trainer_time_all[day]:
-        #         if message.text not in trainer_time_all[day][time_d]:
-        #             inlines_time.add(telebot.types.InlineKeyboardButton(text=time_d, callback_data=f"{day}/{time_d}"))
-        # ivan.send_message(message.chat.id, f"{message.text}", reply_markup=inlines_time)
-
-
-
-#
-# def minus_balance(call):
-#     file = open(clients, "r", encoding='utf-8')
-#     all_users = file.read().split("\n")
-#     file.close()
-#     rez_sum = ""
-#     for ind in range(len(all_users)):
-#         if all_users[ind].split("/")[0] == str(call.message.chat.id):
-#             rez_sum = float(all_users[ind].split('/')[3]) - chec_user_prod(call)[1]
-#             all_users[ind] = f"{all_users[ind].split('/')[0]}/{all_users[ind].split('/')[1]}/{all_users[ind].split('/')[2]}/{rez_sum}"
-#             break
-#     var_var = ''
-#     for ind in range(len(all_users)):
-#         var_var += f'{all_users[ind]}\n'
-#     file = open(clients, "w", encoding='utf-8')
-#     file.write(var_var[0:len(var_var) - 1])
-#     file.close()
-#     ivan.send_message(call.message.chat.id, f"Залишок на рахунку {rez_sum} ₴")
-#
-#
-# def clear_user_product(call):
-#     with open(user_product, "r", encoding='utf-8') as r_file:
-#         user_prod = json.load(r_file)
-#     user_prod[f'{call.message.chat.id}'] = {}
-#     with open(user_product, "w", encoding='utf-8') as w_file:
-#         json.dump(user_prod, w_file, ensure_ascii=False)
+                    inlines.add(telebot.types.InlineKeyboardButton(text=f"{elem_time}",
+                                                                   callback_data=f"{elem_day},{elem_time},"
+                                                                                     f"{message.text}"))
+        ivan.send_message(message.chat.id, f'Ви обрали тренера {message.text}. Оберіть день для тренувань та час',
+                        reply_markup=inlines)
 
 
 ivan.polling(none_stop=True, interval=0)
